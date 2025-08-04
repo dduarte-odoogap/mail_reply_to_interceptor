@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="reply_to_intercept_email" model="ir.config_parameter">
+            <field name="key">mail_reply_to_interceptor.reply_to_intercept_email</field>
+            <field name="value">catchall@domain1.local</field>
+        </record>
+    </data>
+</odoo>
