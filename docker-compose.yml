@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  odoo:
+    build: .
+    ports:
+      - "8069:8069"
+    environment:
+      - HOST=host.docker.internal
+      - USER=dd
+      - PASSWORD=dd
+    volumes:
+      - odoo-web-data:/var/lib/odoo
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command: >
+      bash -c "
+        # Wait for database to be ready
+        until pg_isready -h host.docker.internal -p 5432 -U dd; do
+          echo 'Waiting for local database...'
+          sleep 2
+        done
+        # Initialize database with our module
+        odoo --addons-path=/mnt/extra-addons --db_host=host.docker.internal --db_port=5432 --db_user=dd --db_password=dd -d odoo13_test --stop-after-init -i mail_reply_to_interceptor --test-enable --test-tags=mail_reply_to_interceptor
+        # Start Odoo normally
+        odoo --addons-path=/mnt/extra-addons --db_host=host.docker.internal --db_port=5432 --db_user=dd --db_password=dd -d odoo13_test
+      "
+
+volumes:
+  odoo-web-data:

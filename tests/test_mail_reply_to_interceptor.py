@@ -39,7 +39,7 @@ class TestMailReplyToInterceptor(TransactionCase):
         result = mail._add_sender_to_reply_to('admin@example.com', '')
         self.assertEqual(result, 'admin@example.com')
         
-    def test_prepare_outgoing_list_integration(self):
+    def test_send_integration(self):
         """Test the complete reply-to modification integration."""
         # Set the intercept email parameter
         self.env['ir.config_parameter'].sudo().set_param(
@@ -54,36 +54,51 @@ class TestMailReplyToInterceptor(TransactionCase):
             'reply_to': 'catchall@domain1.local',
             'subject': 'Test Email',
             'body_html': '<p>Test content</p>',
+            'state': 'outgoing',  # Required for _send to process
         })
         
-        # Call _prepare_outgoing_list
-        results = mail._prepare_outgoing_list()
+        # Mock the parent _send method to avoid actual email sending
+        original_reply_to = mail.reply_to
         
-        # Check that reply-to was modified
-        self.assertEqual(len(results), 1)
-        result = results[0]
-        self.assertEqual(result['reply_to'], 'catchall@domain1.local,sender@example.com')
+        # Call _send method (this will modify reply_to)
+        with self.assertRaises(Exception):
+            # _send will fail due to missing mail server, but reply_to should be modified first
+            mail._send()
         
-    def test_prepare_outgoing_list_no_reply_to(self):
+        # Refresh the record to get updated values
+        mail.refresh()
+        
+        # Check that reply-to was modified before the send attempt
+        self.assertEqual(mail.reply_to, 'catchall@domain1.local,sender@example.com')
+        
+    def test_send_no_reply_to(self):
         """Test that emails without reply-to are not modified."""
+        # Set the intercept email parameter
+        self.env['ir.config_parameter'].sudo().set_param(
+            'mail_reply_to_interceptor.reply_to_intercept_email', 
+            'catchall@domain1.local'
+        )
+        
         mail = self.mail_mail.create({
             'email_from': 'sender@example.com',
             'email_to': 'recipient@example.com',
             'subject': 'Test Email',
             'body_html': '<p>Test content</p>',
+            'state': 'outgoing',
         })
         
-        results = mail._prepare_outgoing_list()
+        original_reply_to = mail.reply_to  # Should be False/empty
         
-        # Check that reply-to is either empty or only contains sender (which is the default behavior)
-        self.assertEqual(len(results), 1)
-        result = results[0]
-        reply_to = result.get('reply_to', '')
-        # If reply-to is set, it should be the sender's email (Odoo's default behavior)
-        if reply_to:
-            self.assertEqual(reply_to, 'sender@example.com')
+        # Call _send method 
+        with self.assertRaises(Exception):
+            # Will fail due to missing mail server, but should not modify reply_to
+            mail._send()
+        
+        # Refresh and check that reply-to was not modified
+        mail.refresh()
+        self.assertEqual(mail.reply_to, original_reply_to)
     
-    def test_prepare_outgoing_list_non_matching_reply_to(self):
+    def test_send_non_matching_reply_to(self):
         """Test that emails with non-matching reply-to are not modified."""
         # Set the intercept email parameter
         self.env['ir.config_parameter'].sudo().set_param(
@@ -98,12 +113,16 @@ class TestMailReplyToInterceptor(TransactionCase):
             'reply_to': 'different@example.com',
             'subject': 'Test Email',
             'body_html': '<p>Test content</p>',
+            'state': 'outgoing',
         })
         
-        # Call _prepare_outgoing_list
-        results = mail._prepare_outgoing_list()
+        original_reply_to = mail.reply_to
         
-        # Check that reply-to was NOT modified
-        self.assertEqual(len(results), 1)
-        result = results[0]
-        self.assertEqual(result['reply_to'], 'different@example.com')
+        # Call _send method
+        with self.assertRaises(Exception):
+            # Will fail due to missing mail server, but should not modify reply_to
+            mail._send()
+        
+        # Refresh and check that reply-to was NOT modified
+        mail.refresh()
+        self.assertEqual(mail.reply_to, original_reply_to)

@@ -1,6 +1,6 @@
 {
     'name': 'Mail Reply-To Interceptor',
-    'version': '18.0.1.0.0',
+    'version': '13.0.1.0.0',
     'summary': 'Intercept specific reply-to emails and add sender address',
     'description': """
         This module intercepts outgoing emails with a specific reply-to address

@@ -29,7 +29,9 @@ The module only intercepts emails when the reply-to matches a configured email a
 
 ## Technical Details
 
-The module extends the `mail.mail` model and overrides the `_prepare_outgoing_list` method to modify the reply-to header before emails are sent.
+The module extends the `mail.mail` model and overrides the `_send` method to modify the reply-to header before emails are sent.
+
+**Note:** This is the Odoo 13.0 version. For Odoo 18.0, see the v18 branch which uses `_prepare_outgoing_list` method.
 
 ## Testing
 
