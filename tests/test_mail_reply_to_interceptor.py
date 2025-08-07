@@ -1,5 +1,6 @@
 from odoo.tests import TransactionCase
-
+import logging
+_logger = logging.getLogger(__name__)
 
 class TestMailReplyToInterceptor(TransactionCase):
 
@@ -25,6 +26,7 @@ class TestMailReplyToInterceptor(TransactionCase):
         
     def test_add_sender_to_reply_to(self):
         """Test adding sender email to reply-to header."""
+        _logger.info("IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII")
         mail = self.mail_mail.browse()
         
         # Test adding sender to existing reply-to

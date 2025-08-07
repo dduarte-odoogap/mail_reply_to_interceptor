@@ -50,11 +50,20 @@ class MailMail(models.Model):
         if not sender_email:
             return reply_to
         
-        # Normalize existing reply-to emails
-        existing_emails = tools.mail.email_normalize_all(reply_to)
+        # Parse existing reply-to emails (email_normalize_all doesn't exist in v13)
+        existing_emails = []
+        if reply_to:
+            # Split by comma and normalize each email
+            for email in reply_to.split(','):
+                normalized = tools.mail.email_normalize(email.strip())
+                if normalized:
+                    existing_emails.append(normalized)
+        
+        # Normalize sender email for comparison
+        normalized_sender = tools.mail.email_normalize(sender_email)
         
         # Check if sender email is already in reply-to
-        if sender_email not in existing_emails:
+        if normalized_sender and normalized_sender not in existing_emails:
             # Add sender email to reply-to
             return f"{reply_to},{sender_email}"
         

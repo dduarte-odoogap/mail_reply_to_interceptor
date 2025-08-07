@@ -21,7 +21,9 @@ services:
           sleep 2
         done
         # Initialize database with our module
-        odoo --addons-path=/mnt/extra-addons --db_host=host.docker.internal --db_port=5432 --db_user=dd --db_password=dd -d odoo13_test --stop-after-init -i mail_reply_to_interceptor --test-enable --test-tags=mail_reply_to_interceptor
+        odoo --addons-path=/mnt/extra-addons --db_host=host.docker.internal --db_port=5432 --db_user=dd --db_password=dd -d odoo13_test --stop-after-init -i mail_reply_to_interceptor --max-cron-threads=0 --no-http
+        # Run test
+        odoo --addons-path=/mnt/extra-addons --db_host=host.docker.internal --db_port=5432 --db_user=dd --db_password=dd -d odoo13_test --stop-after-init -u mail_reply_to_interceptor --test-enable --test-tags=mail_reply_to_interceptor
         # Start Odoo normally
         odoo --addons-path=/mnt/extra-addons --db_host=host.docker.internal --db_port=5432 --db_user=dd --db_password=dd -d odoo13_test
       "
